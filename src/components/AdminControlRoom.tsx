@@ -1222,6 +1222,61 @@ export const AdminControlRoom: React.FC<AdminControlRoomProps> = ({
                         </div>
                       )}
                     </div>
+
+                    {/* Rider Verification ID Proof Document Links */}
+                    {isPartner && (
+                      <div className="pt-2 mt-2 border-t border-slate-200/80 flex items-center gap-2.5 flex-wrap">
+                        <span className="text-[11px] font-black text-slate-700 flex items-center gap-1">
+                          <FileCheck className="w-3.5 h-3.5 text-blue-600" />
+                          Driver ID Verification:
+                        </span>
+
+                        {/* 1. Aadhaar Proof Link */}
+                        {(p.identity_url || p.aadhaar_url || p.aadhaar_proof_url || p.owner_id_proof_url) ? (
+                          <a
+                            href={p.identity_url || p.aadhaar_url || p.aadhaar_proof_url || p.owner_id_proof_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold transition shadow-2xs hover:shadow-xs cursor-pointer"
+                            title="Open full-size Aadhaar proof in a new browser tab"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-amber-700" />
+                            <span>View Aadhaar Proof</span>
+                            <ExternalLink className="w-3 h-3 text-amber-700 opacity-80" />
+                          </a>
+                        ) : p.aadhaar_number || p.owner_id_no ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-mono font-bold">
+                            <FileText className="w-3.5 h-3.5 text-slate-500" />
+                            Aadhaar: {p.aadhaar_number || p.owner_id_no}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-400 border border-slate-200 rounded-xl text-[11px]">
+                            <FileText className="w-3 h-3 text-slate-400" />
+                            Aadhaar Not Uploaded
+                          </span>
+                        )}
+
+                        {/* 2. Driving License Link */}
+                        {(p.driving_license_url || p.driving_license_proof_url) ? (
+                          <a
+                            href={p.driving_license_url || p.driving_license_proof_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-300 rounded-xl text-xs font-bold transition shadow-2xs hover:shadow-xs cursor-pointer"
+                            title="Open full-size Driving License in a new browser tab"
+                          >
+                            <FileCheck className="w-3.5 h-3.5 text-blue-700" />
+                            <span>View Driving License</span>
+                            <ExternalLink className="w-3 h-3 text-blue-700 opacity-80" />
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-400 border border-slate-200 rounded-xl text-[11px]">
+                            <FileCheck className="w-3 h-3 text-slate-400" />
+                            Driving License Not Uploaded
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center flex-wrap gap-2 shrink-0">

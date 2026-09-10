@@ -19,6 +19,7 @@ interface AccountSecurityProps {
   currentUser: UserProfile;
   onUpgradeClick: () => void;
   onSignOut?: () => void;
+  onNavigateToAdmin?: () => void;
   onUpdateDeliveryPartner?: (
     userId: string,
     isDeliveryPartner: boolean,
@@ -32,6 +33,7 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({
   currentUser,
   onUpgradeClick,
   onSignOut,
+  onNavigateToAdmin,
   onUpdateDeliveryPartner,
 }) => {
   const [editingPartner, setEditingPartner] = useState(false);
@@ -300,6 +302,36 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({
             </form>
           )}
         </div>
+
+        {/* ADMIN / PARTNER HUB ACCESS SECTION (STRICTLY HARDCODED TO silgrakmarak1309@gmail.com) */}
+        {onNavigateToAdmin && currentUser?.email?.toLowerCase().trim() === 'silgrakmarak1309@gmail.com' && (
+          <div className="mt-6 pt-6 border-t border-slate-100">
+            <div className="p-4 bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center font-black text-white shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="font-bold text-sm flex items-center gap-2">
+                    <span>Partner Hub</span>
+                    <span className="bg-orange-500/30 text-orange-300 text-[10px] px-2 py-0.5 rounded uppercase font-extrabold border border-orange-500/40">
+                      Master Panel
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    Manage listings, recharge requests, shops, vehicles, and delivery fleet.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onNavigateToAdmin}
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 shrink-0 shadow cursor-pointer"
+              >
+                <span>Open Partner Hub</span> →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

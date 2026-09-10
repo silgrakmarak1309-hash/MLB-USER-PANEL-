@@ -45,7 +45,12 @@ export interface UserProfile {
   vehicle_number?: string;
   driving_license?: string;
   driving_license_no?: string;
+  driving_license_url?: string;
   driving_license_proof_url?: string;
+  identity_url?: string;
+  aadhaar_url?: string;
+  aadhaar_number?: string;
+  aadhaar_proof_url?: string;
   vehicle_model?: string;
   vehicle_rc_no?: string;
   vehicle_photo_url?: string;
@@ -544,4 +549,13 @@ export function getWhatsAppUrl(phone: string, text: string): string {
   const encodedText = encodeURIComponent(text);
   return `https://wa.me/${formattedPhone}?text=${encodedText}`;
 }
+
+export const MASTER_ADMIN_EMAIL = 'silgrakmarak1309@gmail.com';
+
+export function isMasterAdmin(user?: UserProfile | null): boolean {
+  if (!user || !user.email) return false;
+  const em = user.email.toLowerCase().trim();
+  return em === MASTER_ADMIN_EMAIL.toLowerCase();
+}
+
 

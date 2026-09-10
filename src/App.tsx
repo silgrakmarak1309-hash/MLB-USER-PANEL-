@@ -31,6 +31,7 @@ import {
   VehicleRegistration,
   DeliveryOrder,
   BannerAd,
+  isMasterAdmin,
 } from './types';
 import { AdminControlRoom } from './components/AdminControlRoom';
 import { UserMarketplace } from './components/UserMarketplace';
@@ -224,7 +225,7 @@ const INITIAL_PROFILES: UserProfile[] = [
   {
     id: 'usr_admin',
     full_name: 'Silgrak Marak (Admin)',
-    email: 'merilocalbazaar@gmail.com',
+    email: 'silgrakmarak1309@gmail.com',
     phone: '9876543210',
     role: 'admin',
     is_pro: true,
@@ -607,6 +608,18 @@ export function App() {
   }, []);
 
   const navigateTo = (route: AppRoute, userTab?: UserNavTab) => {
+    if (route === 'admin' && !isMasterAdmin(currentUser)) {
+      // Hardcoded Security Lock: Block non-master admin and stay on marketplace
+      setCurrentRoute('user');
+      setUserActiveTab('marketplace');
+      try {
+        window.history.pushState({}, '', '/');
+      } catch (_) {
+        window.location.hash = '/';
+      }
+      return;
+    }
+
     setCurrentRoute(route);
     if (userTab) setUserActiveTab(userTab);
 
@@ -684,7 +697,7 @@ export function App() {
         phone: sessionUser.phone || '9876543210',
         city: 'Tura, Meghalaya',
         role:
-          userEmail.includes('admin') || userEmail === 'merilocalbazaar@gmail.com'
+          userEmail.toLowerCase().trim() === 'silgrakmarak1309@gmail.com'
             ? 'admin'
             : 'user',
         is_pro: true,
@@ -1804,9 +1817,17 @@ export function App() {
   }
 
   // =========================================================================
-  // ROUTE 2: ISOLATED ADMIN CONTROL DASHBOARD ('/admin')
+  // ROUTE 2: ISOLATED ADMIN CONTROL DASHBOARD ('/admin') - STRICT SECURITY LOCK
   // =========================================================================
   if (currentRoute === 'admin') {
+    // HARDCODE ADMIN EMAIL IN ROUTE GUARD:
+    // If the authenticated user's email is NOT exactly equal to 'silgrakmarak1309@gmail.com',
+    // completely block the page from rendering and immediately redirect them back to the main user marketplace website ('/').
+    if (!isMasterAdmin(currentUser)) {
+      navigateTo('user', 'marketplace');
+      return null;
+    }
+
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
         {/* Admin Isolation Header */}
@@ -1819,9 +1840,9 @@ export function App() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-black text-lg text-white">Admin Control Dashboard</span>
+                    <span className="font-black text-lg text-white">Partner Hub</span>
                     <span className="bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase">
-                      /admin route
+                      Admin Control Room
                     </span>
                   </div>
                   <div className="text-[10px] text-slate-400">
@@ -2041,6 +2062,18 @@ export function App() {
                 <Sparkles className="w-3.5 h-3.5 fill-current text-amber-700" />
                 PRO Plans
               </button>
+
+              {/* Partner Hub Navigation Button - STRICTLY ONLY for silgrakmarak1309@gmail.com */}
+              {isMasterAdmin(currentUser) && (
+                <button
+                  onClick={() => navigateTo('admin')}
+                  className="ml-1 px-3 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-xs bg-slate-900 text-orange-400 hover:bg-slate-800 hover:text-orange-300 border border-orange-500/40 cursor-pointer"
+                  title="Open Partner Hub"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-orange-500" />
+                  Partner Hub
+                </button>
+              )}
             </nav>
 
             {/* User Profile Badge & Mobile Menu Button */}
@@ -2305,6 +2338,20 @@ export function App() {
               <Sparkles className="w-4 h-4 text-amber-700" />
               PRO Plans
             </button>
+
+            {/* Partner Hub Direct Link (Mobile - STRICTLY ONLY for silgrakmarak1309@gmail.com) */}
+            {isMasterAdmin(currentUser) && (
+              <button
+                onClick={() => {
+                  navigateTo('admin');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full p-2.5 rounded-xl text-xs font-black text-left flex items-center gap-2 bg-slate-900 text-orange-400 border border-orange-500/40 shadow-xs cursor-pointer"
+              >
+                <ShieldAlert className="w-4 h-4 text-orange-500" />
+                Partner Hub
+              </button>
+            )}
           </div>
         )}
       </header>
@@ -2499,6 +2546,7 @@ export function App() {
             currentUser={currentUser}
             onUpgradeClick={() => setUserActiveTab('pro_upgrade')}
             onSignOut={handleSignOut}
+            onNavigateToAdmin={() => navigateTo('admin')}
             onUpdateDeliveryPartner={handleUpdateDeliveryPartner}
           />
         )}
@@ -2545,16 +2593,28 @@ export function App() {
         featureName={authTargetFeature}
       />
 
-      {/* User Footer */}
+      {/* User Footer with Quick Admin Switch */}
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>© {new Date().getFullYear()} Meri Local Bazaar. All rights reserved.</div>
-          <div className="flex items-center gap-4 text-[11px] font-semibold text-slate-600">
+          <div className="flex items-center gap-4 text-[11px] font-semibold text-slate-600 flex-wrap justify-center">
             <span>Verified Local Sellers</span>
             <span>•</span>
             <span>WhatsApp Direct Inquiry</span>
             <span>•</span>
             <span>Secure Database</span>
+            {isMasterAdmin(currentUser) && (
+              <>
+                <span>•</span>
+                <button
+                  onClick={() => navigateTo('admin')}
+                  className="text-orange-600 hover:text-orange-700 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-orange-600" />
+                  Partner Hub
+                </button>
+              </>
+            )}
           </div>
         </div>
       </footer>
