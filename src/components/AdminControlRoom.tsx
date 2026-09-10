@@ -82,6 +82,7 @@ interface AdminControlRoomProps {
   onUpdateBannerAd?: (id: string, updates: Partial<BannerAd>) => Promise<void> | void;
   onDeleteBannerAd?: (id: string) => Promise<void> | void;
   onToggleBannerAd?: (id: string, currentStatus: boolean) => Promise<void> | void;
+  onToggleProfileApproval?: (profile: UserProfile, approved: boolean) => void;
 }
 
 export const AdminControlRoom: React.FC<AdminControlRoomProps> = ({
@@ -111,6 +112,7 @@ export const AdminControlRoom: React.FC<AdminControlRoomProps> = ({
   onUpdateBannerAd,
   onDeleteBannerAd,
   onToggleBannerAd,
+  onToggleProfileApproval,
 }) => {
   const [adminTab, setAdminTab] = useState<
     'listings' | 'orders_verification' | 'registrations' | 'recharges' | 'members' | 'banner_ads' | 'settings'
@@ -1144,14 +1146,17 @@ export const AdminControlRoom: React.FC<AdminControlRoomProps> = ({
           <div className="space-y-4">
             {filteredProfiles.map((p) => {
               const isPartner = p.is_delivery_partner || p.role === 'delivery_partner';
+              const dlNumber = p.driving_license || p.driving_license_no;
+              const vehPlate = p.vehicle_number || p.vehicle_rc_no;
+              const isApproved = !!p.is_approved_by_admin;
 
               return (
                 <div
                   key={p.id}
-                  className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-start justify-between gap-4"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-slate-900 text-base">
                         {p.full_name || 'Anonymous User'}
                       </span>
@@ -1163,6 +1168,21 @@ export const AdminControlRoom: React.FC<AdminControlRoomProps> = ({
                       {isPartner && (
                         <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                           <Truck className="w-3 h-3" /> Rider: {p.vehicle_type || 'Bike'} ({p.partner_status})
+                        </span>
+                      )}
+                      {p.shop_name && (
+                        <span className="bg-orange-100 text-orange-900 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Store className="w-3 h-3" /> Shop: {p.shop_name}
+                        </span>
+                      )}
+                      {/* is_approved_by_admin Badge */}
+                      {isApproved ? (
+                        <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Admin Approved
+                        </span>
+                      ) : (
+                        <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-amber-600" /> Pending Admin Approval
                         </span>
                       )}
                     </div>
@@ -1177,6 +1197,24 @@ export const AdminControlRoom: React.FC<AdminControlRoomProps> = ({
                           {p.payout_upi_id || 'Not registered'}
                         </span>
                       </div>
+                      {dlNumber && (
+                        <div>
+                          <strong>Driving License:</strong>{' '}
+                          <span className="font-mono text-blue-700 font-bold">{dlNumber}</span>
+                        </div>
+                      )}
+                      {vehPlate && (
+                        <div>
+                          <strong>Vehicle / RC:</strong>{' '}
+                          <span className="font-mono text-slate-800 font-bold">{vehPlate}</span>{' '}
+                          {p.vehicle_model && <span>({p.vehicle_model})</span>}
+                        </div>
+                      )}
+                      {p.shop_name && (
+                        <div>
+                          <strong>Shop Details:</strong> {p.shop_name} • {p.shop_category || 'General'} • {p.shop_address || p.city_locality || 'Tura'}
+                        </div>
+                      )}
                       {p.payout_bank_name && (
                         <div>
                           <strong>Bank:</strong> {p.payout_bank_name} • <strong>A/C:</strong>{' '}
@@ -1186,7 +1224,40 @@ export const AdminControlRoom: React.FC<AdminControlRoomProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center flex-wrap gap-2 shrink-0">
+                    {(p.driving_license_proof_url || p.owner_id_proof_url) && (
+                      <button
+                        onClick={() => setInspectDocUrl(p.driving_license_proof_url || p.owner_id_proof_url || null)}
+                        className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 transition flex items-center gap-1"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-blue-600" />
+                        Doc Proof
+                      </button>
+                    )}
+
+                    {/* Toggle is_approved_by_admin Button */}
+                    <button
+                      onClick={() => onToggleProfileApproval?.(p, !isApproved)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1 shadow-xs cursor-pointer ${
+                        isApproved
+                          ? 'bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-700'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      }`}
+                      title={isApproved ? 'Click to revoke admin verification' : 'Click to grant official admin verified status'}
+                    >
+                      {isApproved ? (
+                        <>
+                          <XCircle className="w-3.5 h-3.5" />
+                          Revoke Approval
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Approve Profile
+                        </>
+                      )}
+                    </button>
+
                     {isPartner && p.partner_status === 'pending' && (
                       <button
                         onClick={() =>
@@ -1198,7 +1269,7 @@ export const AdminControlRoom: React.FC<AdminControlRoomProps> = ({
                             p.vehicle_number
                           )
                         }
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition"
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition"
                       >
                         ✓ Approve Rider
                       </button>

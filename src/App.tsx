@@ -976,6 +976,36 @@ export function App() {
     }
   };
 
+  // Admin Toggle is_approved_by_admin for Profiles
+  const handleToggleProfileApproval = async (profile: UserProfile, approved: boolean) => {
+    setProfiles((prev) =>
+      prev.map((p) =>
+        p.id === profile.id || (profile.email && p.email === profile.email)
+          ? { ...p, is_approved_by_admin: approved }
+          : p
+      )
+    );
+
+    if (currentUser && (currentUser.id === profile.id || (profile.email && currentUser.email === profile.email))) {
+      const updated = { ...currentUser, is_approved_by_admin: approved };
+      setCurrentUser(updated);
+      try {
+        localStorage.setItem('mlb_active_user', JSON.stringify(updated));
+      } catch (_) {}
+    }
+
+    if (supabase) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ is_approved_by_admin: approved })
+          .eq('id', profile.id);
+      } catch (e) {
+        console.warn('Supabase toggle profile approval sync:', e);
+      }
+    }
+  };
+
   // Admin Save Settings
   const handleSaveSetting = async (key: string, value: string) => {
     setSettings((prev) => {
@@ -1132,7 +1162,7 @@ export function App() {
     }
   };
 
-  const handleSubmitShop = (
+  const handleSubmitShop = async (
     data: Omit<ShopRegistration, 'id' | 'created_at' | 'status'>
   ) => {
     const newShop: ShopRegistration = {
@@ -1142,9 +1172,73 @@ export function App() {
       created_at: new Date().toISOString(),
     };
     handleShopSubmitted(newShop);
+
+    // Sync all shop fields directly to the user profile in Supabase & local state
+    const targetUserId = currentUser?.id || data.user_id;
+    if (targetUserId) {
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === targetUserId
+            ? {
+                ...p,
+                shop_name: data.shop_name,
+                shop_category: data.category,
+                shop_address: data.shop_address,
+                shop_id_proof_type: data.shop_id_proof_type,
+                shop_id_no: data.shop_id_no,
+                owner_name: data.owner_name,
+                owner_id_type: data.owner_id_type,
+                owner_id_no: data.owner_id_no,
+                owner_id_proof_url: data.owner_id_proof_url,
+                city_locality: data.city_locality,
+                shop_banner_url: data.shop_banner_url,
+                description: data.description,
+                opening_hours: data.opening_hours,
+                payout_upi_id: data.payout_upi_id || p.payout_upi_id,
+                payout_bank_name: data.payout_bank_name || p.payout_bank_name,
+                payout_account_no: data.payout_account_no || p.payout_account_no,
+                payout_ifsc_code: data.payout_ifsc_code || p.payout_ifsc_code,
+                payout_qr_image_url: data.payout_qr_image_url || p.payout_qr_image_url,
+                is_approved_by_admin: false,
+              }
+            : p
+        )
+      );
+
+      if (supabase) {
+        try {
+          await supabase
+            .from('profiles')
+            .update({
+              shop_name: data.shop_name,
+              shop_category: data.category,
+              shop_address: data.shop_address,
+              shop_id_proof_type: data.shop_id_proof_type,
+              shop_id_no: data.shop_id_no,
+              owner_name: data.owner_name,
+              owner_id_type: data.owner_id_type,
+              owner_id_no: data.owner_id_no,
+              owner_id_proof_url: data.owner_id_proof_url,
+              city_locality: data.city_locality,
+              shop_banner_url: data.shop_banner_url,
+              description: data.description,
+              opening_hours: data.opening_hours,
+              payout_upi_id: data.payout_upi_id,
+              payout_bank_name: data.payout_bank_name,
+              payout_account_no: data.payout_account_no,
+              payout_ifsc_code: data.payout_ifsc_code,
+              payout_qr_image_url: data.payout_qr_image_url,
+              is_approved_by_admin: false,
+            })
+            .eq('id', targetUserId);
+        } catch (e) {
+          console.warn('Supabase profile shop fields sync:', e);
+        }
+      }
+    }
   };
 
-  const handleSubmitVehicle = (
+  const handleSubmitVehicle = async (
     data: Omit<VehicleRegistration, 'id' | 'created_at' | 'status'>
   ) => {
     const newVeh: VehicleRegistration = {
@@ -1154,6 +1248,64 @@ export function App() {
       created_at: new Date().toISOString(),
     };
     handleVehicleSubmitted(newVeh);
+
+    // Sync all vehicle fields directly to the user profile in Supabase & local state
+    const targetUserId = currentUser?.id || data.user_id;
+    if (targetUserId) {
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === targetUserId
+            ? {
+                ...p,
+                vehicle_type: data.vehicle_type,
+                vehicle_number: data.vehicle_reg_no,
+                driving_license: data.driving_license_no,
+                driving_license_no: data.driving_license_no,
+                driving_license_proof_url: data.driving_license_proof_url,
+                vehicle_model: data.vehicle_model,
+                vehicle_rc_no: data.vehicle_rc_no,
+                vehicle_photo_url: data.vehicle_photo_url,
+                operational_route: data.operational_route,
+                daily_rate_or_fare: data.daily_rate_or_fare,
+                payout_upi_id: data.payout_upi_id || p.payout_upi_id,
+                payout_bank_name: data.payout_bank_name || p.payout_bank_name,
+                payout_account_no: data.payout_account_no || p.payout_account_no,
+                payout_ifsc_code: data.payout_ifsc_code || p.payout_ifsc_code,
+                payout_qr_image_url: data.payout_qr_image_url || p.payout_qr_image_url,
+                is_approved_by_admin: false,
+              }
+            : p
+        )
+      );
+
+      if (supabase) {
+        try {
+          await supabase
+            .from('profiles')
+            .update({
+              vehicle_type: data.vehicle_type,
+              vehicle_number: data.vehicle_reg_no,
+              driving_license: data.driving_license_no,
+              driving_license_no: data.driving_license_no,
+              driving_license_proof_url: data.driving_license_proof_url,
+              vehicle_model: data.vehicle_model,
+              vehicle_rc_no: data.vehicle_rc_no,
+              vehicle_photo_url: data.vehicle_photo_url,
+              operational_route: data.operational_route,
+              daily_rate_or_fare: data.daily_rate_or_fare,
+              payout_upi_id: data.payout_upi_id,
+              payout_bank_name: data.payout_bank_name,
+              payout_account_no: data.payout_account_no,
+              payout_ifsc_code: data.payout_ifsc_code,
+              payout_qr_image_url: data.payout_qr_image_url,
+              is_approved_by_admin: false,
+            })
+            .eq('id', targetUserId);
+        } catch (e) {
+          console.warn('Supabase profile vehicle fields sync:', e);
+        }
+      }
+    }
   };
 
   const handleApproveShopRegistration = async (id: string) => {
@@ -1228,6 +1380,14 @@ export function App() {
     phone: string;
     vehicleType: 'Bike' | 'Scooty' | 'Auto' | 'Commercial Auto';
     vehicleNumber: string;
+    drivingLicenseNo?: string;
+    drivingLicenseProofUrl?: string;
+    vehicleRcNo?: string;
+    payoutUpiId?: string;
+    payoutBankName?: string;
+    payoutAccountNo?: string;
+    payoutIfscCode?: string;
+    payoutQrImageUrl?: string;
   }) => {
     setProfiles((prev) =>
       prev.map((p) =>
@@ -1239,12 +1399,46 @@ export function App() {
               is_delivery_partner: true,
               vehicle_type: data.vehicleType,
               vehicle_number: data.vehicleNumber,
+              driving_license: data.drivingLicenseNo || p.driving_license,
+              driving_license_no: data.drivingLicenseNo || p.driving_license_no,
+              driving_license_proof_url: data.drivingLicenseProofUrl || p.driving_license_proof_url,
+              vehicle_rc_no: data.vehicleRcNo || p.vehicle_rc_no,
+              payout_upi_id: data.payoutUpiId || p.payout_upi_id,
+              payout_bank_name: data.payoutBankName || p.payout_bank_name,
+              payout_account_no: data.payoutAccountNo || p.payout_account_no,
+              payout_ifsc_code: data.payoutIfscCode || p.payout_ifsc_code,
+              payout_qr_image_url: data.payoutQrImageUrl || p.payout_qr_image_url,
               partner_status: 'pending',
               role: p.role === 'user' ? 'delivery_partner' : p.role,
             }
           : p
       )
     );
+
+    if (currentUser) {
+      const updated = {
+        ...currentUser,
+        full_name: data.fullName,
+        phone: data.phone,
+        is_delivery_partner: true,
+        vehicle_type: data.vehicleType,
+        vehicle_number: data.vehicleNumber,
+        driving_license: data.drivingLicenseNo || currentUser.driving_license,
+        driving_license_no: data.drivingLicenseNo || currentUser.driving_license_no,
+        driving_license_proof_url: data.drivingLicenseProofUrl || currentUser.driving_license_proof_url,
+        vehicle_rc_no: data.vehicleRcNo || currentUser.vehicle_rc_no,
+        payout_upi_id: data.payoutUpiId || currentUser.payout_upi_id,
+        payout_bank_name: data.payoutBankName || currentUser.payout_bank_name,
+        payout_account_no: data.payoutAccountNo || currentUser.payout_account_no,
+        payout_ifsc_code: data.payoutIfscCode || currentUser.payout_ifsc_code,
+        payout_qr_image_url: data.payoutQrImageUrl || currentUser.payout_qr_image_url,
+        partner_status: 'pending',
+      };
+      setCurrentUser(updated);
+      try {
+        localStorage.setItem('mlb_active_user', JSON.stringify(updated));
+      } catch (_) {}
+    }
 
     if (supabase) {
       try {
@@ -1256,6 +1450,15 @@ export function App() {
             is_delivery_partner: true,
             vehicle_type: data.vehicleType,
             vehicle_number: data.vehicleNumber,
+            driving_license: data.drivingLicenseNo,
+            driving_license_no: data.drivingLicenseNo,
+            driving_license_proof_url: data.drivingLicenseProofUrl,
+            vehicle_rc_no: data.vehicleRcNo,
+            payout_upi_id: data.payoutUpiId,
+            payout_bank_name: data.payoutBankName,
+            payout_account_no: data.payoutAccountNo,
+            payout_ifsc_code: data.payoutIfscCode,
+            payout_qr_image_url: data.payoutQrImageUrl,
             partner_status: 'pending',
           })
           .eq('id', currentUser.id);
@@ -1595,6 +1798,7 @@ export function App() {
             onUpdateBannerAd={handleUpdateBannerAd}
             onDeleteBannerAd={handleDeleteBannerAd}
             onToggleBannerAd={handleToggleBannerAd}
+            onToggleProfileApproval={handleToggleProfileApproval}
           />
         </main>
 
