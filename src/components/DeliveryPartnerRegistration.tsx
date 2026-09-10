@@ -232,7 +232,7 @@ export const DeliveryPartnerRegistration: React.FC<DeliveryPartnerRegistrationPr
               Delivery Partner Registration
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-              Earn reliable daily income delivering parcels, groceries, and shop orders in your local town with transparent 80% partner payouts and fuel allowances.
+              Earn reliable daily income delivering parcels, groceries, and shop orders in your local town with transparent 90% partner payouts and fuel allowances.
             </p>
           </div>
 
@@ -621,7 +621,7 @@ export const DeliveryPartnerRegistration: React.FC<DeliveryPartnerRegistrationPr
                     className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
                   />
                   <label htmlFor="terms_agree" className="text-[11px] text-slate-700 font-medium leading-tight">
-                    I confirm that I possess a valid Driving License, active Vehicle RC, and agree to the <strong className="text-slate-900">80% Partner / 20% App Commission</strong> rate per delivery ticket. Customer se koi alag se cash nahi lena hai.
+                    I confirm that I possess a valid Driving License, active Vehicle RC, and agree to the <strong className="text-slate-900">90% Partner / 10% App Commission</strong> rate per delivery ticket. Customer se koi alag se cash nahi lena hai.
                   </label>
                 </div>
               </div>
@@ -727,14 +727,14 @@ export const DeliveryPartnerRegistration: React.FC<DeliveryPartnerRegistrationPr
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-emerald-300 font-bold">Partner Net Earning (80%):</span>
+                  <span className="text-emerald-300 font-bold">Partner Net Earning (90%):</span>
                   <span className="font-mono text-base font-black text-emerald-400">
                     ₹{formatPrice(fareEstimate.partnerEarning)}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center text-[10px] text-slate-500">
-                  <span>Platform Commission (20%):</span>
+                  <span>Platform Commission (10%):</span>
                   <span className="font-mono">₹{formatPrice(fareEstimate.appCommission)}</span>
                 </div>
               </div>

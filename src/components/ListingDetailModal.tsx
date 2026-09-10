@@ -16,8 +16,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Camera,
+  Car,
+  Wrench,
+  Package,
 } from 'lucide-react';
-import { Listing, formatPrice, isHeavyItemCategory, getListingImages } from '../types';
+import { Listing, formatPrice, getCategoryFulfillmentBadge, getListingImages } from '../types';
 
 interface ListingDetailModalProps {
   listing: Listing | null;
@@ -57,7 +60,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
   const telUrl = `tel:${cleanPhoneDigits.length === 10 ? `+91${cleanPhoneDigits}` : rawPhone}`;
   const whatsappUrl = formatWhatsAppUrl(listing.whatsapp || listing.phone, listing);
 
-  const isHeavy = isHeavyItemCategory(listing.category_name, listing.title);
+  const fulfillmentBadge = getCategoryFulfillmentBadge(listing.category_name, listing.title);
   const images = getListingImages(listing);
   const currentImage = images[selectedImageIndex] || images[0];
 
@@ -204,14 +207,44 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Heavy Product Restriction Warning or Fast Delivery badge */}
-          {isHeavy ? (
+          {/* Category Fulfillment Notice */}
+          {fulfillmentBadge.type === 'ride' ? (
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3.5 flex items-start gap-3 text-blue-950 text-xs">
+              <Car className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <strong className="block font-bold">Ride Booking / Driver Included:</strong>
+                  <span className="text-[10px] font-black uppercase bg-blue-200/80 text-blue-900 px-2 py-0.5 rounded-full">
+                    Ride Service
+                  </span>
+                </div>
+                <span className="text-slate-600 text-[11px] mt-0.5 block">
+                  Verified local driver / cab / traveler service. Directly call or WhatsApp to confirm route, timings & booking fare.
+                </span>
+              </div>
+            </div>
+          ) : fulfillmentBadge.type === 'service' ? (
+            <div className="bg-purple-50 border border-purple-200 rounded-2xl p-3.5 flex items-start gap-3 text-purple-950 text-xs">
+              <Wrench className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <strong className="block font-bold">Onsite Service / Service Visit:</strong>
+                  <span className="text-[10px] font-black uppercase bg-purple-200/80 text-purple-900 px-2 py-0.5 rounded-full">
+                    Onsite Visit
+                  </span>
+                </div>
+                <span className="text-slate-600 text-[11px] mt-0.5 block">
+                  Local certified expert onsite visit at your doorstep. Contact directly to schedule appointment time and site estimates.
+                </span>
+              </div>
+            </div>
+          ) : fulfillmentBadge.type === 'self_pickup' ? (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 flex items-start gap-3 text-amber-900 text-xs">
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <strong className="block font-bold">Heavy Product / Vehicle Notice:</strong>
+                <strong className="block font-bold">Vehicle / Heavy Item — Self-Pickup Notice:</strong>
                 <span>
-                  Yeh item heavy category (Vehicle/Property/Furniture) mein aata hai. Iska home delivery courier available nahi hai — sirf <strong>Self-Pickup & Direct Buyer Inspection</strong> permissible hai.
+                  Yeh item vehicle ya heavy category (Bike, Car, Auto, Vehicle, Property, etc.) mein aata hai. Iska doorstep courier available nahi hai — sirf <strong>Self-Pickup & Direct Buyer Inspection</strong> permissible hai.
                 </span>
               </div>
             </div>
@@ -220,7 +253,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
               <div className="flex items-center gap-2">
                 <Truck className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>
-                  <strong>100% Prepaid Delivery:</strong> Local dispatch available across Garo Hills.
+                  <strong>100% Prepaid Delivery:</strong> Local doorstep dispatch available across Garo Hills.
                 </span>
               </div>
               <span className="text-[10px] font-black uppercase bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full">
@@ -316,7 +349,13 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
             >
               <ShoppingBag className="w-4 h-4" />
               <span>
-                {isHeavy ? 'Order with Self-Pickup (Advance Pay)' : '⚡ Buy Now with 100% Prepaid Delivery'}
+                {fulfillmentBadge.type === 'self_pickup'
+                  ? 'Order with Self-Pickup (Advance Pay)'
+                  : fulfillmentBadge.type === 'ride'
+                  ? '🚗 Book Ride / Request Driver'
+                  : fulfillmentBadge.type === 'service'
+                  ? '🔧 Request Onsite Service Visit'
+                  : '⚡ Buy Now with 100% Prepaid Delivery'}
               </span>
             </button>
           )}

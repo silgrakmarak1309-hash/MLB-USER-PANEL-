@@ -201,63 +201,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               </span>
             </button>
 
-            {/* Quick Demo Sign-in Profiles for instant testing */}
-            <div className="pt-2 border-t border-slate-100">
-              <div className="text-[11px] font-bold uppercase text-slate-400 text-center tracking-wider mb-2.5">
-                Instant One-Click Google Profiles
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleGoogleSignIn(
-                      'merilocalbazaar@gmail.com',
-                      'Silgrak Marak (Admin)',
-                      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
-                    )
-                  }
-                  className="p-2.5 bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-300 rounded-xl text-left transition flex items-center gap-2"
-                >
-                  <div className="w-7 h-7 rounded-full bg-orange-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                    S
-                  </div>
-                  <div className="overflow-hidden">
-                    <div className="text-xs font-bold text-slate-800 truncate">Silgrak Marak</div>
-                    <div className="text-[10px] text-slate-500 font-medium truncate">merilocalbazaar</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleGoogleSignIn(
-                      'tengsu.driver@gmail.com',
-                      'Tengsu Sangma (Driver)',
-                      'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80'
-                    )
-                  }
-                  className="p-2.5 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 rounded-xl text-left transition flex items-center gap-2"
-                >
-                  <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                    T
-                  </div>
-                  <div className="overflow-hidden">
-                    <div className="text-xs font-bold text-slate-800 truncate">Tengsu (Driver)</div>
-                    <div className="text-[10px] text-slate-500 font-medium truncate">tengsu.driver</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-
             {/* Custom Google Email Option */}
-            <div>
+            <div className="pt-2 border-t border-slate-100">
               {!showCustomInput ? (
                 <button
                   type="button"
                   onClick={() => setShowCustomInput(true)}
-                  className="w-full text-center text-xs text-slate-500 hover:text-orange-600 font-bold transition py-1"
+                  className="w-full text-center text-xs text-slate-500 hover:text-orange-600 font-bold transition py-1 flex items-center justify-center gap-1"
                 >
-                  Enter custom Gmail ID →
+                  <span>Or enter custom Gmail ID</span>
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               ) : (
                 <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5 animate-in fade-in duration-200">

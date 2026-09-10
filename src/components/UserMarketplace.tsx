@@ -12,8 +12,19 @@ import {
   Truck,
   Zap,
   Camera,
+  Car,
+  Wrench,
+  Package,
+  Store,
 } from 'lucide-react';
-import { Listing, formatPrice, isHeavyItemCategory, getListingPrimaryImage, getListingImages, BannerAd } from '../types';
+import {
+  Listing,
+  formatPrice,
+  getCategoryFulfillmentBadge,
+  getListingPrimaryImage,
+  getListingImages,
+  BannerAd,
+} from '../types';
 import { HeroBannerSection } from './HeroBannerSection';
 
 interface UserMarketplaceProps {
@@ -166,8 +177,6 @@ export const UserMarketplace: React.FC<UserMarketplaceProps> = ({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
             {activeListings.map((item) => {
-              const isHeavy = isHeavyItemCategory(item.category_name, item.title);
-
               return (
                 <div
                   key={item.id}
@@ -211,15 +220,36 @@ export const UserMarketplace: React.FC<UserMarketplaceProps> = ({
                       </span>
                     )}
 
-                    {isHeavy ? (
-                      <span className="absolute bottom-1.5 right-1.5 bg-amber-950/80 text-amber-200 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-xs leading-none">
-                        Self-Pickup
-                      </span>
-                    ) : (
-                      <span className="absolute bottom-1.5 right-1.5 bg-emerald-950/80 text-emerald-300 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-xs leading-none flex items-center gap-0.5">
-                        <Truck className="w-2.5 h-2.5" /> Delivery
-                      </span>
-                    )}
+                    {/* Fulfillment & Category Badge */}
+                    {(() => {
+                      const badge = getCategoryFulfillmentBadge(item.category_name, item.title);
+                      if (badge.type === 'ride') {
+                        return (
+                          <span className="absolute bottom-1.5 right-1.5 bg-blue-950/85 text-blue-300 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-xs leading-none flex items-center gap-0.5 shadow-2xs">
+                            <Car className="w-2.5 h-2.5" /> Ride Booking
+                          </span>
+                        );
+                      }
+                      if (badge.type === 'service') {
+                        return (
+                          <span className="absolute bottom-1.5 right-1.5 bg-purple-950/85 text-purple-300 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-xs leading-none flex items-center gap-0.5 shadow-2xs">
+                            <Wrench className="w-2.5 h-2.5" /> Onsite Service
+                          </span>
+                        );
+                      }
+                      if (badge.type === 'self_pickup') {
+                        return (
+                          <span className="absolute bottom-1.5 right-1.5 bg-slate-900/90 text-amber-300 border border-amber-500/40 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-xs leading-none flex items-center gap-0.5 shadow-2xs">
+                            <Store className="w-2.5 h-2.5 text-orange-400" /> Self-Pickup
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="absolute bottom-1.5 right-1.5 bg-emerald-950/85 text-emerald-300 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-xs leading-none flex items-center gap-0.5 shadow-2xs">
+                          <Truck className="w-2.5 h-2.5" /> Delivery Available
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   {/* Typography & Info Container */}

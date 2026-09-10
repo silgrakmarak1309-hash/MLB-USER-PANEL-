@@ -173,31 +173,170 @@ export const HEAVY_CATEGORIES = [
   'Heavy Machinery & Tools',
 ];
 
+export type FulfillmentBadgeType = 'delivery' | 'ride' | 'service' | 'self_pickup';
+
+export interface FulfillmentBadgeInfo {
+  type: FulfillmentBadgeType;
+  label: string;
+  badgeLabel: string;
+  iconType: 'truck' | 'car' | 'wrench' | 'package';
+  badgeClass: string;
+}
+
+export function getCategoryFulfillmentBadge(categoryName?: string, title?: string): FulfillmentBadgeInfo {
+  const cat = (categoryName || '').toLowerCase().trim();
+  const t = (title || '').toLowerCase().trim();
+  const combined = `${cat} ${t}`;
+
+  // 1. Commercial Transport / Ride Services & Bookings
+  // Categories: 'Local Cab & Taxi', 'Travelers & Tour', 'Bike & Auto Rickshaw' commercial rides, 'Vehicle Rental & Taxi'
+  const isRideBooking =
+    cat.includes('local cab') ||
+    cat.includes('cab & taxi') ||
+    cat.includes('traveler') ||
+    cat.includes('tour') ||
+    cat.includes('vehicle rental') ||
+    combined.includes('cab service') ||
+    combined.includes('taxi service') ||
+    combined.includes('traveler') ||
+    combined.includes('tour package') ||
+    combined.includes('tour & wedding') ||
+    combined.includes('ride service') ||
+    combined.includes('ride booking') ||
+    combined.includes('driver included') ||
+    combined.includes('24x7 ac cab') ||
+    combined.includes('airport transfer') ||
+    (cat.includes('bike & auto') && (combined.includes('service') || combined.includes('booking') || combined.includes('ride') || combined.includes('fare') || combined.includes('cab')));
+
+  if (isRideBooking) {
+    return {
+      type: 'ride',
+      label: 'Ride Booking',
+      badgeLabel: 'Ride Booking',
+      iconType: 'car',
+      badgeClass: 'bg-blue-950/85 text-blue-300 border border-blue-400/30 shadow-2xs',
+    };
+  }
+
+  // 2. Second-Hand Vehicle Sales / Personal Vehicles for Sale (e.g., 'Vehicles', 'Cars & Vehicles', 'Bikes & Scooters', Royal Enfield Hunter 350, used cars/bikes)
+  // Buyers collect the vehicle physically -> Force 'Self-Pickup'
+  const isVehicleSale =
+    cat === 'vehicles' ||
+    cat.includes('cars & vehicles') ||
+    cat.includes('bikes & scooters') ||
+    cat.includes('commercial vehicles') ||
+    combined.includes('royal enfield') ||
+    combined.includes('hunter 350') ||
+    combined.includes('hunter') ||
+    combined.includes('enfield') ||
+    combined.includes('bullet') ||
+    combined.includes('scooter') ||
+    combined.includes('motorcycle') ||
+    combined.includes('second hand') ||
+    combined.includes('used car') ||
+    combined.includes('used bike') ||
+    combined.includes('bike for sale') ||
+    combined.includes('car for sale') ||
+    (cat.includes('bike & auto') && !isRideBooking) ||
+    (cat.includes('bike') && !isRideBooking) ||
+    (cat.includes('auto rickshaw') && !isRideBooking);
+
+  if (isVehicleSale) {
+    return {
+      type: 'self_pickup',
+      label: 'Self-Pickup',
+      badgeLabel: 'Self-Pickup',
+      iconType: 'package',
+      badgeClass: 'bg-slate-900/90 text-amber-300 border border-amber-500/40 shadow-2xs',
+    };
+  }
+
+  // 3. Bulky Real Estate & Property that cannot be couriered -> "Self-Pickup"
+  const isBulkyRealEstate =
+    cat.includes('property') ||
+    cat.includes('real estate') ||
+    cat.includes('heavy machinery') ||
+    cat.includes('machinery') ||
+    combined.includes('land') ||
+    combined.includes('plot') ||
+    combined.includes('building');
+
+  if (isBulkyRealEstate) {
+    return {
+      type: 'self_pickup',
+      label: 'Self-Pickup',
+      badgeLabel: 'Self-Pickup',
+      iconType: 'package',
+      badgeClass: 'bg-amber-950/85 text-amber-200 border border-amber-400/30 shadow-2xs',
+    };
+  }
+
+  // 4. Local Jobs & Services -> "Onsite Service" or "Service Visit"
+  const isService =
+    cat.includes('service') ||
+    cat.includes('job') ||
+    combined.includes('electrician') ||
+    combined.includes('plumber') ||
+    combined.includes('carpenter') ||
+    combined.includes('wiring') ||
+    combined.includes('repair') ||
+    combined.includes('mechanic') ||
+    combined.includes('cleaning service') ||
+    combined.includes('technician') ||
+    combined.includes('onsite service') ||
+    combined.includes('service visit');
+
+  if (isService) {
+    return {
+      type: 'service',
+      label: 'Onsite Service',
+      badgeLabel: 'Onsite Service',
+      iconType: 'wrench',
+      badgeClass: 'bg-purple-950/85 text-purple-300 border border-purple-400/30 shadow-2xs',
+    };
+  }
+
+  // 5. Default: Physical shippable items ('Shops', 'Mobiles & Gadgets', Electronics, Fashion, Grocery) -> Green "Delivery Available"
+  return {
+    type: 'delivery',
+    label: 'Delivery Available',
+    badgeLabel: 'Delivery Available',
+    iconType: 'truck',
+    badgeClass: 'bg-emerald-950/85 text-emerald-300 border border-emerald-400/30 shadow-2xs',
+  };
+}
+
+export function isVehicleCategory(categoryName?: string, title?: string): boolean {
+  if (!categoryName && !title) return false;
+  const lower = `${categoryName || ''} ${title || ''}`.toLowerCase();
+  return (
+    lower.includes('bike & auto') ||
+    lower.includes('auto rickshaw') ||
+    lower.includes('cab & taxi') ||
+    lower.includes('local cab') ||
+    lower.includes('traveler') ||
+    lower.includes('tour') ||
+    lower.includes('vehicle') ||
+    lower.includes('car') ||
+    lower.includes('bike') ||
+    lower.includes('scooter') ||
+    lower.includes('motorcycle') ||
+    lower.includes('bullet') ||
+    lower.includes('taxi') ||
+    lower.includes('tempo')
+  );
+}
+
 export function isHeavyItemCategory(categoryName?: string, title?: string): boolean {
   if (!categoryName && !title) return false;
   const lower = `${categoryName || ''} ${title || ''}`.toLowerCase();
   return (
-    lower.includes('car') ||
-    lower.includes('bike') ||
-    lower.includes('scooter') ||
-    lower.includes('vehicle') ||
-    lower.includes('motorcycle') ||
-    lower.includes('enfield') ||
-    lower.includes('bullet') ||
-    lower.includes('auto rickshaw') ||
-    lower.includes('tempo') ||
-    lower.includes('traveler') ||
-    lower.includes('taxi') ||
+    isVehicleCategory(categoryName, title) ||
     lower.includes('property') ||
     lower.includes('land') ||
     lower.includes('plot') ||
-    lower.includes('furniture') ||
-    lower.includes('sofa') ||
-    lower.includes('bed') ||
-    lower.includes('wardrobe') ||
-    lower.includes('refrigerator') ||
-    lower.includes('washing machine') ||
-    lower.includes('almirah')
+    lower.includes('building') ||
+    lower.includes('heavy machinery')
   );
 }
 
@@ -222,8 +361,9 @@ export function calculateDeliveryFare(
     totalFare = 20 + wt * 5 + km * 12;
   }
 
-  const appCommission = Math.round(totalFare * 0.2 * 100) / 100; // 20%
-  const partnerEarning = Math.round((totalFare - appCommission) * 100) / 100; // 80%
+  // Exactly 10% App Commission & 90% Partner Net Earning
+  const appCommission = Math.round(totalFare * 0.10 * 100) / 100; // 10%
+  const partnerEarning = Math.round((totalFare - appCommission) * 100) / 100; // 90%
 
   return {
     totalFare,

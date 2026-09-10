@@ -21,6 +21,7 @@ import {
   DeliveryOrder,
   calculateDeliveryFare,
   isHeavyItemCategory,
+  isVehicleCategory,
   formatPrice,
   getListingPrimaryImage,
 } from '../types';
@@ -45,9 +46,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   onSubmitOrder,
   onOrderPlaced,
 }) => {
-  const isHeavy = isHeavyItemCategory(listing.category_name, listing.title) || listing.is_heavy_item;
+  const isVehicle = isVehicleCategory(listing.category_name, listing.title);
+  const isHeavy = isHeavyItemCategory(listing.category_name, listing.title) || listing.is_heavy_item || isVehicle;
 
-  // Fulfillment: Forced to 'self_pickup' if heavy, otherwise user can select 'home_delivery' or 'self_pickup'
+  // Fulfillment: Forced to 'self_pickup' if vehicle or heavy, otherwise user can select 'home_delivery' or 'self_pickup'
   const [fulfillmentType, setFulfillmentType] = useState<'home_delivery' | 'self_pickup'>(
     isHeavy ? 'self_pickup' : 'home_delivery'
   );
@@ -323,21 +325,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
             </div>
 
-            {/* PART 4: HEAVY ITEM ALERT OR FULFILLMENT SELECTOR */}
+            {/* PART 4: VEHICLE / HEAVY ITEM ALERT OR FULFILLMENT SELECTOR */}
             {isHeavy ? (
-              <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 space-y-2">
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 space-y-2.5">
                 <div className="flex items-center gap-2 text-amber-900 font-black text-sm">
                   <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-                  <span>Heavy / Large Vehicle Category Notice</span>
+                  <span>
+                    {isVehicle
+                      ? 'Automobile & Vehicle Category — Doorstep Courier Disabled'
+                      : 'Heavy Item / Property Notice — Courier Disabled'}
+                  </span>
                 </div>
                 <p className="text-xs text-amber-800 leading-relaxed font-medium">
-                  Yeh ek bada/bhaari product hai (Car, Bike, Vehicle, Land, ya Large Furniture). 
-                  <strong> Iski home delivery available nahi hai.</strong> Aapko online advance payment karne ke baad product lene ke liye khud <strong>'Shop Visit (Self Pickup)'</strong> karna hoga.
+                  {isVehicle
+                    ? "Yeh listing ek automobile/vehicle category ('Bike & Auto Rickshaw', 'Local Cab & Taxi', 'Travelers & Tour') mein aati hai. Hamare local delivery partners bike/car transport nahi karte hain, isliye Doorstep Delivery disabled hai. Is listing ke liye sirf 'Self Pickup / Store Visit' permissible hai."
+                    : "Yeh ek bulky/heavy item hai. Iski doorstep courier delivery available nahi hai. Sirf 'Self Pickup / Store Visit' mode permissible hai."}
                 </p>
                 <div className="pt-2 flex items-center justify-between text-xs font-bold text-amber-900 border-t border-amber-200">
-                  <span>Fulfillment Method:</span>
+                  <span>Permitted Fulfillment:</span>
                   <span className="bg-amber-200 text-amber-900 px-2.5 py-1 rounded-lg">
-                    🏬 Self Pickup Only (Delivery Fee: ₹0)
+                    🏬 Self Pickup / Store Visit Only (₹0 Delivery Fee)
                   </span>
                 </div>
               </div>
