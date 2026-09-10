@@ -39,14 +39,24 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       presetAvatar ||
       'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
 
+    // Dynamically derive current deployment origin (e.g. Vercel deployment URL, production domain, or preview sandbox)
+    const currentOrigin =
+      typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : 'https://ais-dev-mylfdfrzwnyjhipfvcskrq-563394565880.asia-southeast1.run.app';
+
     try {
-      // If live Supabase client exists, attempt OAuth initiation
+      // If live Supabase client exists, attempt OAuth initiation with dynamic origin redirect
       if (supabase && !presetEmail && !customEmail) {
         try {
           const { error: oauthError } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-              redirectTo: window.location.origin,
+              redirectTo: currentOrigin,
+              queryParams: {
+                access_type: 'offline',
+                prompt: 'consent',
+              },
             },
           });
           if (oauthError) {

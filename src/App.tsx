@@ -659,6 +659,81 @@ export function App() {
   const [authTargetFeature, setAuthTargetFeature] = useState('this feature');
   const [pendingAuthAction, setPendingAuthAction] = useState<(() => void) | null>(null);
 
+  // Sync Supabase Auth session on return from OAuth (Vercel / live deployment)
+  useEffect(() => {
+    if (!supabase) return;
+
+    const handleAuthUserSync = async (sessionUser: any) => {
+      if (!sessionUser?.email) return;
+
+      const userEmail: string = sessionUser.email;
+      const userName: string =
+        sessionUser.user_metadata?.full_name ||
+        sessionUser.user_metadata?.name ||
+        userEmail.split('@')[0];
+      const avatarUrl: string =
+        sessionUser.user_metadata?.avatar_url ||
+        sessionUser.user_metadata?.picture ||
+        `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80`;
+
+      const userProfile: UserProfile = {
+        id: sessionUser.id || `usr_${Math.random().toString(36).substring(2, 9)}`,
+        email: userEmail,
+        full_name: userName,
+        avatar_url: avatarUrl,
+        phone: sessionUser.phone || '9876543210',
+        city: 'Tura, Meghalaya',
+        role:
+          userEmail.includes('admin') || userEmail === 'merilocalbazaar@gmail.com'
+            ? 'admin'
+            : 'user',
+        is_pro: true,
+        pro_status: 'active',
+        pro_expiry: '2028-12-31',
+        is_delivery_partner: false,
+        partner_status: 'approved',
+        created_at: new Date().toISOString(),
+      };
+
+      setCurrentUser((prev) => {
+        if (prev && prev.email === userProfile.email) return prev;
+        return userProfile;
+      });
+
+      try {
+        localStorage.setItem('mlb_active_user', JSON.stringify(userProfile));
+      } catch (_) {}
+
+      try {
+        await supabase.from('profiles').upsert([userProfile]);
+      } catch (err) {
+        console.warn('Profile sync post-OAuth:', err);
+      }
+
+      setIsAuthModalOpen(false);
+    };
+
+    // Check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        handleAuthUserSync(session.user);
+      }
+    });
+
+    // Listen for OAuth redirect state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        handleAuthUserSync(session.user);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   // Protected route action wrapper
   const handleRequireAuth = (featureName: string, action: () => void) => {
     if (currentUser) {

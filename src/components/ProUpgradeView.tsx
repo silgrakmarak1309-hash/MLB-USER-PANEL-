@@ -18,6 +18,9 @@ import {
   Headphones,
   TrendingUp,
   Info,
+  Upload,
+  Image as ImageIcon,
+  X,
 } from 'lucide-react';
 import { ProPlan, RechargeRequest } from '../types';
 import { UpiIntentButtons } from './UpiIntentButtons';
@@ -132,6 +135,7 @@ export const ProUpgradeView: React.FC<ProUpgradeViewProps> = ({
   // Default to 1 Year Plan (Best Value)
   const [selectedPlan, setSelectedPlan] = useState<ProPlan>(SUBSCRIPTION_PLANS[3]);
   const [utr, setUtr] = useState('');
+  const [receiptUrl, setReceiptUrl] = useState<string>('');
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
@@ -141,9 +145,28 @@ export const ProUpgradeView: React.FC<ProUpgradeViewProps> = ({
 
   const handleSelectPlan = (plan: ProPlan) => {
     setSelectedPlan(plan);
-    // Smooth scroll down to checkout on mobile / desktop
-    if (checkoutRef.current) {
-      checkoutRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setError(null);
+    // Smooth scroll with requestAnimationFrame to prevent layout thrashing
+    requestAnimationFrame(() => {
+      if (checkoutRef.current) {
+        checkoutRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  };
+
+  const handleReceiptUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Payment receipt image size must be under 5MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setReceiptUrl(event.target?.result as string);
+        setError(null);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -284,19 +307,17 @@ export const ProUpgradeView: React.FC<ProUpgradeViewProps> = ({
             <div
               key={plan.id}
               onClick={() => handleSelectPlan(plan)}
-              className={`rounded-3xl p-6 sm:p-7 flex flex-col justify-between relative transition-all duration-300 cursor-pointer ${
-                isBestValue
-                  ? isSelected
-                    ? 'bg-gradient-to-b from-amber-500/10 via-orange-500/5 to-white border-2 border-orange-500 shadow-2xl ring-4 ring-orange-500/20 scale-[1.03] z-10'
-                    : 'bg-gradient-to-b from-amber-50/80 to-white border-2 border-amber-500 shadow-xl hover:border-orange-500 hover:shadow-2xl hover:scale-[1.02] z-10'
-                  : isSelected
-                  ? 'bg-orange-50/40 border-2 border-orange-500 shadow-xl ring-2 ring-orange-400/20'
-                  : 'bg-white border border-slate-200 hover:border-orange-300 hover:shadow-lg'
+              className={`rounded-3xl p-6 sm:p-7 flex flex-col justify-between relative transition-colors duration-200 cursor-pointer ${
+                isSelected
+                  ? 'bg-gradient-to-b from-orange-500/10 via-amber-500/5 to-white border-2 border-orange-500 shadow-xl ring-2 ring-orange-500/30'
+                  : isBestValue
+                  ? 'bg-gradient-to-b from-amber-50/80 to-white border-2 border-amber-400 shadow-md hover:border-orange-400 hover:shadow-lg'
+                  : 'bg-white border border-slate-200 hover:border-orange-300 hover:shadow-md'
               }`}
             >
               {/* Highlight Badges */}
               {isBestValue && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 font-black text-[10px] sm:text-[11px] px-3.5 py-1 rounded-full shadow-lg uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 font-black text-[10px] sm:text-[11px] px-3.5 py-1 rounded-full shadow-md uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">
                   <Crown className="w-3.5 h-3.5 fill-slate-950" />
                   <span>MOST POPULAR / BEST VALUE</span>
                 </div>
@@ -447,7 +468,7 @@ export const ProUpgradeView: React.FC<ProUpgradeViewProps> = ({
 
             {/* QR Code Container */}
             <div className="p-5 bg-slate-50 rounded-3xl border border-slate-200 flex flex-col sm:flex-row items-center gap-5">
-              <div className="relative group">
+              <div className="relative group shrink-0">
                 <img
                   src={
                     qrCodeUrl ||
@@ -459,10 +480,10 @@ export const ProUpgradeView: React.FC<ProUpgradeViewProps> = ({
                 <div className="absolute inset-0 bg-orange-600/10 rounded-2xl pointer-events-none" />
               </div>
 
-              <div className="space-y-3 text-center sm:text-left flex-1">
+              <div className="space-y-3 text-center sm:text-left flex-1 min-w-0">
                 <div>
                   <div className="text-xs font-bold text-slate-500">Official Merchant UPI ID:</div>
-                  <div className="flex items-center justify-center sm:justify-start gap-2 mt-1">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 mt-1 flex-wrap">
                     <span className="font-mono text-sm font-black bg-white px-3 py-1.5 rounded-xl border border-slate-200 text-slate-900 shadow-2xs">
                       {upiId}
                     </span>
@@ -506,7 +527,7 @@ export const ProUpgradeView: React.FC<ProUpgradeViewProps> = ({
             </div>
           </div>
 
-          {/* Right: Step 2 Form (12-Digit UTR Submission) */}
+          {/* Right: Step 2 Form (12-Digit UTR Submission & Photo Upload) */}
           <div className="flex-1 w-full bg-slate-50 p-6 sm:p-7 rounded-3xl border border-slate-200 space-y-5">
             <div>
               <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
@@ -544,6 +565,44 @@ export const ProUpgradeView: React.FC<ProUpgradeViewProps> = ({
                   <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   Can be found in payment receipt under "UPI Ref No" or "UTR".
                 </p>
+              </div>
+
+              {/* Optional Payment Screenshot Upload Container */}
+              <div>
+                <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
+                  Payment Screenshot / Receipt (Optional)
+                </label>
+                {receiptUrl ? (
+                  <div className="relative inline-block border-2 border-emerald-400 rounded-2xl p-1 bg-white shadow-sm">
+                    <img
+                      src={receiptUrl}
+                      alt="Payment Receipt"
+                      className="w-24 h-24 object-cover rounded-xl"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setReceiptUrl('')}
+                      className="absolute -top-2 -right-2 bg-rose-600 text-white rounded-full p-1 shadow-md hover:bg-rose-700 transition"
+                      title="Remove receipt"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="border-2 border-dashed border-slate-300 hover:border-orange-400 bg-white hover:bg-orange-50/40 rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer transition text-center group">
+                    <Upload className="w-6 h-6 text-slate-400 group-hover:text-orange-500 transition mb-1" />
+                    <span className="text-xs font-bold text-slate-700 group-hover:text-orange-600">
+                      Upload Payment Screenshot
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-0.5">PNG, JPG up to 5MB</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleReceiptUpload}
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
 
               {/* User Identity Snapshot */}

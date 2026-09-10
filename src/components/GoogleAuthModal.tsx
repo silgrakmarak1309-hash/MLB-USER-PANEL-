@@ -46,6 +46,12 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
     setLoading(true);
     setError(null);
 
+    // Dynamically derive current deployment origin (e.g. Vercel deployment URL, production domain, or preview sandbox)
+    const currentOrigin =
+      typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : 'https://ais-dev-mylfdfrzwnyjhipfvcskrq-563394565880.asia-southeast1.run.app';
+
     const emailToUse = presetEmail || 'merilocalbazaar@gmail.com';
     const nameToUse = presetName || 'Silgrak Marak';
     const avatarToUse =
@@ -53,20 +59,28 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({
       'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
 
     try {
-      // If live Supabase client exists and configured, attempt standard OAuth initiation
+      // If live Supabase client exists and configured, initiate real Google OAuth with dynamic origin redirect
       if (supabase && !presetEmail) {
         try {
-          const { error: oauthError } = await supabase.auth.signInWithOAuth({
+          const { data: oauthData, error: oauthError } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-              redirectTo: window.location.origin,
+              redirectTo: currentOrigin,
+              queryParams: {
+                access_type: 'offline',
+                prompt: 'consent',
+              },
             },
           });
+
           if (oauthError) {
-            console.warn('Supabase OAuth popup note:', oauthError.message);
+            console.warn('Supabase OAuth notice:', oauthError.message);
+          } else if (oauthData?.url && !window.location.href.includes('sandbox')) {
+            // In standalone/Vercel browser tabs, navigation happens directly
+            // window.location.href = oauthData.url;
           }
         } catch (oauthEx) {
-          console.warn('OAuth redirect in sandbox:', oauthEx);
+          console.warn('OAuth redirect notice:', oauthEx);
         }
       }
 
